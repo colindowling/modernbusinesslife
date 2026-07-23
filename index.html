@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Modern Business Life</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cream: #FAF8F4;
+      --white: #FFFFFF;
+      --ink: #1A1A1A;
+      --ink-light: #555555;
+      --ink-muted: #888888;
+      --amber: #0891B2;
+      --amber-light: #E0F4F9;
+      --amber-dark: #0670A0;
+      --border: #E8E4DC;
+      --shadow: 0 2px 12px rgba(0,0,0,0.07);
+      --shadow-hover: 0 8px 32px rgba(0,0,0,0.13);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--cream);
+      color: var(--ink);
+      line-height: 1.6;
+    }
+
+    /* NAV */
+    nav {
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      padding: 0 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .nav-logo-mark {
+      width: 36px;
+      height: 36px;
+      background: var(--amber);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 16px;
+      color: var(--white);
+      letter-spacing: -0.5px;
+      flex-shrink: 0;
+    }
+
+    .nav-logo-text {
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--ink);
+      line-height: 1.2;
+    }
+
+    .nav-logo-text span {
+      display: block;
+      font-weight: 400;
+      font-size: 11px;
+      color: var(--ink-muted);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn-ghost {
+      padding: 8px 16px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink);
+      text-decoration: none;
+      transition: all 0.2s;
+      font-family: inherit;
+      cursor: pointer;
+      background: transparent;
+    }
+
+    .btn-ghost:hover {
+      border-color: var(--amber);
+      color: var(--amber-dark);
+    }
+
+    .btn-primary {
+      padding: 8px 18px;
+      background: var(--amber);
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--white);
+      text-decoration: none;
+      transition: all 0.2s;
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    .btn-primary:hover {
+      background: var(--amber-dark);
+      transform: translateY(-1px);
+    }
+
+    /* HERO */
+    .hero {
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      padding: 72px 32px 64px;
+      text-align: center;
+    }
+
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--amber-light);
+      color: var(--amber-dark);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 5px 12px;
+      border-radius: 100px;
+      margin-bottom: 24px;
+    }
+
+    .hero-eyebrow::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      background: var(--amber);
+      border-radius: 50%;
+    }
+
+    .hero h1 {
+      font-family: 'Lora', serif;
+      font-size: clamp(32px, 5vw, 52px);
+      font-weight: 600;
+      line-height: 1.2;
+      color: var(--ink);
+      max-width: 720px;
+      margin: 0 auto 20px;
+    }
+
+    .hero h1 em {
+      font-style: italic;
+      color: var(--amber-dark);
+    }
+
+    .hero-sub {
+      font-size: 17px;
+      color: var(--ink-light);
+      max-width: 520px;
+      margin: 0 auto 32px;
+      line-height: 1.7;
+    }
+
+    .hero-topics {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 36px;
+    }
+
+    .topic-pill {
+      padding: 5px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 100px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink-light);
+      background: var(--cream);
+    }
+
+    .hero-cta {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn-large {
+      padding: 14px 28px;
+      font-size: 15px;
+      border-radius: 10px;
+    }
+
+    /* VIDEOS SECTION */
+    .videos-section {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 64px 32px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 32px;
+    }
+
+    .section-title {
+      font-family: 'Lora', serif;
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .section-link {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--amber-dark);
+      text-decoration: none;
+    }
+
+    .section-link:hover { text-decoration: underline; }
+
+    /* VIDEO GRID */
+    .video-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .video-featured {
+      grid-column: span 2;
+      grid-row: span 2;
+    }
+
+    .video-card {
+      background: var(--white);
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      transition: box-shadow 0.25s, transform 0.25s;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .video-card:hover {
+      box-shadow: var(--shadow-hover);
+      transform: translateY(-3px);
+    }
+
+    .video-thumb-wrap {
+      position: relative;
+      width: 100%;
+      padding-top: 56.25%;
+      background: #111;
+      overflow: hidden;
+    }
+
+    .video-thumb-wrap img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s;
+    }
+
+    .video-card:hover .video-thumb-wrap img {
+      transform: scale(1.03);
+    }
+
+    .play-btn {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.2);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .video-card:hover .play-btn { opacity: 1; }
+
+    .play-icon {
+      width: 52px;
+      height: 52px;
+      background: rgba(255,255,255,0.95);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .play-icon svg { margin-left: 3px; }
+
+    .video-meta {
+      padding: 16px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .video-featured .video-meta {
+      padding: 20px;
+      gap: 10px;
+    }
+
+    .video-title {
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--ink);
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .video-featured .video-title {
+      font-size: 18px;
+      -webkit-line-clamp: 3;
+    }
+
+    .video-date {
+      font-size: 12px;
+      color: var(--ink-muted);
+      font-weight: 500;
+    }
+
+    .featured-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--amber-light);
+      color: var(--amber-dark);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 3px 9px;
+      border-radius: 100px;
+      width: fit-content;
+    }
+
+    /* MODAL */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-overlay.active { display: flex; }
+
+    .modal-inner {
+      background: #000;
+      border-radius: 12px;
+      overflow: hidden;
+      width: 100%;
+      max-width: 900px;
+      position: relative;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: -44px;
+      right: 0;
+      background: none;
+      border: none;
+      color: white;
+      font-size: 28px;
+      cursor: pointer;
+      line-height: 1;
+      padding: 4px 8px;
+    }
+
+    .modal-iframe-wrap {
+      position: relative;
+      padding-top: 56.25%;
+    }
+
+    .modal-iframe-wrap iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    /* GUEST CTA */
+    .guest-cta {
+      background: var(--ink);
+      color: var(--white);
+      padding: 72px 32px;
+      text-align: center;
+    }
+
+    .guest-cta h2 {
+      font-family: 'Lora', serif;
+      font-size: clamp(24px, 4vw, 38px);
+      font-weight: 600;
+      margin-bottom: 16px;
+      line-height: 1.25;
+    }
+
+    .guest-cta h2 em {
+      font-style: italic;
+      color: var(--amber);
+    }
+
+    .guest-cta p {
+      font-size: 16px;
+      color: rgba(255,255,255,0.65);
+      max-width: 480px;
+      margin: 0 auto 32px;
+      line-height: 1.7;
+    }
+
+    .guest-cta .btn-primary {
+      font-size: 15px;
+      padding: 14px 32px;
+      border-radius: 10px;
+    }
+
+    /* FOOTER */
+    footer {
+      background: var(--white);
+      border-top: 1px solid var(--border);
+      padding: 28px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .footer-left {
+      font-size: 13px;
+      color: var(--ink-muted);
+    }
+
+    .footer-right {
+      display: flex;
+      gap: 16px;
+    }
+
+    .footer-right a {
+      font-size: 13px;
+      color: var(--ink-muted);
+      text-decoration: none;
+    }
+
+    .footer-right a:hover { color: var(--amber-dark); }
+
+    /* LOADING / ERROR */
+    .loading-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 64px 0;
+      color: var(--ink-muted);
+      font-size: 15px;
+    }
+
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid var(--border);
+      border-top-color: var(--amber);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      .video-grid { grid-template-columns: 1fr; }
+      .video-featured { grid-column: span 1; grid-row: span 1; }
+      .hero { padding: 48px 20px 40px; }
+      .videos-section { padding: 40px 20px; }
+      nav { padding: 0 20px; }
+      .nav-logo-text span { display: none; }
+    }
+
+    @media (max-width: 960px) and (min-width: 769px) {
+      .video-grid { grid-template-columns: repeat(2, 1fr); }
+      .video-featured { grid-column: span 2; grid-row: span 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a href="#" class="nav-logo">
+      <div class="nav-logo-mark">MBL</div>
+      <div class="nav-logo-text">
+        Modern Business Life
+        <span>Video Series</span>
+      </div>
+    </a>
+    <div class="nav-actions">
+      <a href="https://www.youtube.com/@ModernBusinessLife" target="_blank" class="btn-ghost">Watch on YouTube</a>
+      <a href="#be-a-guest" class="btn-primary">Be a Guest</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-eyebrow">New episodes weekly</div>
+    <h1>Stories from the <em>front lines</em> of modern business</h1>
+    <p class="hero-sub">Real conversations with the leaders building and scaling companies — the decisions, tradeoffs, and hard-won lessons behind growth, operations, and technology.</p>
+    <div class="hero-topics">
+      <div class="topic-pill">Sales</div>
+      <div class="topic-pill">Marketing</div>
+      <div class="topic-pill">AI & Infrastructure</div>
+      <div class="topic-pill">Operations</div>
+      <div class="topic-pill">Growth</div>
+    </div>
+    <div class="hero-cta">
+      <a href="https://www.youtube.com/@ModernBusinessLife" target="_blank" class="btn-primary btn-large">Watch Episodes</a>
+      <a href="#be-a-guest" class="btn-ghost btn-large">Apply to be a Guest</a>
+    </div>
+  </section>
+
+  <!-- VIDEOS -->
+  <section class="videos-section">
+    <div class="section-header">
+      <h2 class="section-title">Latest Episodes</h2>
+      <a href="https://www.youtube.com/@ModernBusinessLife" target="_blank" class="section-link">View all on YouTube →</a>
+    </div>
+    <div class="video-grid" id="videoGrid">
+      <div class="loading-state">
+        <div class="spinner"></div>
+        Loading latest episodes…
+      </div>
+    </div>
+  </section>
+
+  <!-- GUEST CTA -->
+  <section class="guest-cta" id="be-a-guest">
+    <h2>Want to share your story <em>on Modern Business Life?</em></h2>
+    <p>We feature leaders who are building real things. 30–45 minutes over Zoom. You keep full rights to your episode and clips to share with your network.</p>
+    <a href="mailto:colin@rncld.com?subject=MBL%20Guest%20Application" class="btn-primary">Apply to be a Guest</a>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-left">© 2026 Modern Business Life. All rights reserved.</div>
+    <div class="footer-right">
+      <a href="https://www.youtube.com/@ModernBusinessLife" target="_blank">YouTube</a>
+      <a href="mailto:colin@rncld.com">Contact</a>
+    </div>
+  </footer>
+
+  <!-- VIDEO MODAL -->
+  <div class="modal-overlay" id="videoModal">
+    <div class="modal-inner">
+      <button class="modal-close" id="modalClose">✕</button>
+      <div class="modal-iframe-wrap">
+        <iframe id="modalIframe" src="" allowfullscreen allow="autoplay; encrypted-media"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_KEY = 'AIzaSyB3tPT-lv_X3tTskI2CBDLDNkuCDh8vymE';
+    const CHANNEL_ID = 'UCZ7LAnAeOy6XDiI826n3Iyg';
+    const MAX_RESULTS = 20;
+
+    function formatDate(iso) {
+      return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    function getBestThumb(thumbnails) {
+      return (thumbnails.maxres || thumbnails.standard || thumbnails.high || thumbnails.medium || thumbnails.default).url;
+    }
+
+    function createCard(video, index) {
+      const isFeatured = index === 0;
+      const card = document.createElement('div');
+      card.className = 'video-card' + (isFeatured ? ' video-featured' : '');
+
+      card.innerHTML = `
+        <div class="video-thumb-wrap">
+          <img src="${getBestThumb(video.snippet.thumbnails)}" alt="${video.snippet.title}" loading="${isFeatured ? 'eager' : 'lazy'}" />
+          <div class="play-btn">
+            <div class="play-icon">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                <path d="M6 3.5L14.5 9L6 14.5V3.5Z" fill="#1A1A1A"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+        <div class="video-meta">
+          ${isFeatured ? '<div class="featured-badge">Latest Episode</div>' : ''}
+          <div class="video-title">${video.snippet.title}</div>
+          <div class="video-date">${formatDate(video.snippet.publishedAt)}</div>
+        </div>
+      `;
+
+      card.addEventListener('click', () => openModal(video.id.videoId));
+      return card;
+    }
+
+    async function loadVideos() {
+      const grid = document.getElementById('videoGrid');
+      try {
+        const searchUrl = `https://www.googleapis.com/youtube/v3/search?key=${API_KEY}&channelId=${CHANNEL_ID}&part=snippet,id&order=date&maxResults=${MAX_RESULTS}&type=video`;
+        const res = await fetch(searchUrl);
+        const data = await res.json();
+
+        if (!data.items || data.items.length === 0) {
+          grid.innerHTML = '<div class="loading-state">No episodes found. Check back soon.</div>';
+          return;
+        }
+
+        grid.innerHTML = '';
+        data.items.forEach((video, i) => {
+          grid.appendChild(createCard(video, i));
+        });
+      } catch (err) {
+        grid.innerHTML = `<div class="loading-state">Couldn't load episodes right now. <a href="https://www.youtube.com/@ModernBusinessLife" target="_blank" style="color:var(--amber-dark)">Watch on YouTube →</a></div>`;
+        console.error(err);
+      }
+    }
+
+    function openModal(videoId) {
+      const modal = document.getElementById('videoModal');
+      document.getElementById('modalIframe').src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
+      modal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('videoModal');
+      document.getElementById('modalIframe').src = '';
+      modal.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    document.getElementById('modalClose').addEventListener('click', closeModal);
+    document.getElementById('videoModal').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) closeModal();
+    });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+
+    loadVideos();
+  </script>
+</body>
+</html>
