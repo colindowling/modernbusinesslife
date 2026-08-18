@@ -683,7 +683,9 @@
     }
 
     function getBestThumb(thumbnails) {
-      return (thumbnails.maxres || thumbnails.standard || thumbnails.high || thumbnails.medium || thumbnails.default).url;
+      if (!thumbnails) return '';
+      var t = thumbnails.maxres || thumbnails.standard || thumbnails.high || thumbnails.medium || thumbnails.default;
+      return t ? t.url : '';
     }
 
     function createCard(video, index) {
@@ -713,20 +715,63 @@
       return card;
     }
 
+    // The uploads playlist id is the channel id with UC -> UU.
+    // playlistItems.list costs 1 quota unit and reflects uploads immediately;
+    // search.list costs 100 and lags behind YouTube's search index.
+    const UPLOADS_PLAYLIST = 'UU' + CHANNEL_ID.slice(2);
+
+    function normalize(item) {
+      // Map a playlistItems entry onto the shape createCard expects.
+      return {
+        id: { videoId: item.snippet.resourceId ? item.snippet.resourceId.videoId : item.contentDetails.videoId },
+        snippet: {
+          title: item.snippet.title,
+          thumbnails: item.snippet.thumbnails,
+          publishedAt: (item.contentDetails && item.contentDetails.videoPublishedAt) || item.snippet.publishedAt
+        }
+      };
+    }
+
+    function isPlayable(item) {
+      // Private and deleted entries remain in the playlist but have no thumbnail.
+      var t = item.snippet && item.snippet.title;
+      if (t === 'Private video' || t === 'Deleted video') return false;
+      return !!getBestThumb(item.snippet && item.snippet.thumbnails);
+    }
+
     async function loadVideos() {
       const grid = document.getElementById('videoGrid');
       try {
-        const searchUrl = `https://www.googleapis.com/youtube/v3/search?key=${API_KEY}&channelId=${CHANNEL_ID}&part=snippet,id&order=date&maxResults=${MAX_RESULTS}&type=video`;
-        const res = await fetch(searchUrl);
+        let videos = [];
+
+        const playlistUrl = `https://www.googleapis.com/youtube/v3/playlistItems?key=${API_KEY}` +
+          `&playlistId=${UPLOADS_PLAYLIST}&part=snippet,contentDetails&maxResults=${MAX_RESULTS}`;
+        const res = await fetch(playlistUrl);
         const data = await res.json();
 
-        if (!data.items || data.items.length === 0) {
+        if (data.items && data.items.length) {
+          videos = data.items.filter(isPlayable).map(normalize);
+        } else {
+          // Fallback: if the playlist read fails, use search (costlier, may lag).
+          const searchUrl = `https://www.googleapis.com/youtube/v3/search?key=${API_KEY}` +
+            `&channelId=${CHANNEL_ID}&part=snippet,id&order=date&maxResults=${MAX_RESULTS}&type=video`;
+          const sRes = await fetch(searchUrl);
+          const sData = await sRes.json();
+          videos = (sData.items || []).filter(function(v) { return v.id && v.id.videoId; });
+        }
+
+        if (!videos.length) {
           grid.innerHTML = '<div class="loading-state">No episodes found. Check back soon.</div>';
           return;
         }
 
+        // Newest first, in case the playlist ever returns out of order.
+        videos.sort(function(a, b) {
+          return new Date(b.snippet.publishedAt) - new Date(a.snippet.publishedAt);
+        });
+
         grid.innerHTML = '';
-        data.items.forEach((video, i) => {
+        videos.forEach((video, i) => {
           grid.appendChild(createCard(video, i));
         });
       } catch (err) {
