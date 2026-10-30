@@ -483,6 +483,25 @@
 
     .footer-right a:hover { color: var(--amber-dark); }
 
+    /* INFINITE SCROLL STATUS */
+    .video-feed-status {
+      text-align: center;
+      color: var(--ink-muted);
+      font-size: 14px;
+      padding: 28px 0 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .video-feed-status:empty { display: none; }
+    .video-feed-status .spinner { width: 20px; height: 20px; margin: 0; border-width: 2px; }
+    .video-feed-status a { color: var(--amber-dark); font-weight: 600; text-decoration: none; }
+    .video-feed-more { text-align: center; padding-top: 24px; }
+    .video-feed-more button[hidden] { display: none; }
+    .video-feed-more button { cursor: pointer; font: inherit; }
+
     /* LOADING / ERROR */
     .loading-state {
       grid-column: 1 / -1;
@@ -602,7 +621,7 @@
   <!-- VIDEOS -->
   <section class="videos-section">
     <div class="section-header">
-      <h2 class="section-title">Latest Episodes</h2>
+      <h2 class="section-title">All Episodes</h2>
       <a href="https://www.youtube.com/@ModernBusinessLife" target="_blank" class="section-link">View all on YouTube →</a>
     </div>
     <div class="video-grid" id="videoGrid">
@@ -611,6 +630,9 @@
         Loading latest episodes…
       </div>
     </div>
+    <div class="video-feed-status" id="videoStatus" aria-live="polite"></div>
+    <div class="video-feed-more"><button type="button" class="btn-ghost" id="loadMoreBtn" hidden>Load more episodes</button></div>
+    <div id="videoSentinel" aria-hidden="true" style="height:1px"></div>
   </section>
 
   <!-- GUEST CTA -->
@@ -676,7 +698,8 @@
   <script>
     const API_KEY = 'AIzaSyB3tPT-lv_X3tTskI2CBDLDNkuCDh8vymE';
     const CHANNEL_ID = 'UCZ7LAnAeOy6XDiI826n3Iyg';
-    const MAX_RESULTS = 20;
+    // Episodes per API page. The grid loads the next page as you scroll.
+    const PAGE_SIZE = 12;
 
     function formatDate(iso) {
       return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -688,6 +711,12 @@
       return t ? t.url : '';
     }
 
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, function(c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+
     function createCard(video, index) {
       const isFeatured = index === 0;
       const card = document.createElement('div');
@@ -695,7 +724,7 @@
 
       card.innerHTML = `
         <div class="video-thumb-wrap">
-          <img src="${getBestThumb(video.snippet.thumbnails)}" alt="${video.snippet.title}" loading="${isFeatured ? 'eager' : 'lazy'}" />
+          <img src="${getBestThumb(video.snippet.thumbnails)}" alt="${escapeHtml(video.snippet.title)}" loading="${isFeatured ? 'eager' : 'lazy'}" />
           <div class="play-btn">
             <div class="play-icon">
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -706,7 +735,7 @@
         </div>
         <div class="video-meta">
           ${isFeatured ? '<div class="featured-badge">Latest Episode</div>' : ''}
-          <div class="video-title">${video.snippet.title}</div>
+          <div class="video-title">${escapeHtml(video.snippet.title)}</div>
           <div class="video-date">${formatDate(video.snippet.publishedAt)}</div>
         </div>
       `;
@@ -739,45 +768,102 @@
       return !!getBestThumb(item.snippet && item.snippet.thumbnails);
     }
 
-    async function loadVideos() {
-      const grid = document.getElementById('videoGrid');
-      try {
-        let videos = [];
+    // ---- Infinite scroll over the full uploads playlist ----
+    // The playlist API returns at most 50 items per call, newest first, plus a
+    // nextPageToken. We fetch one page at a time and load the next page when the
+    // sentinel under the grid scrolls into view, until there are no pages left.
+    const feed = {
+      nextToken: '',     // '' = first page; null = no more pages
+      loading: false,
+      rendered: 0,
+      seen: new Set(),
+      useSearch: false   // fallback mode if playlistItems ever fails
+    };
 
-        const playlistUrl = `https://www.googleapis.com/youtube/v3/playlistItems?key=${API_KEY}` +
-          `&playlistId=${UPLOADS_PLAYLIST}&part=snippet,contentDetails&maxResults=${MAX_RESULTS}`;
-        const res = await fetch(playlistUrl);
-        const data = await res.json();
-
-        if (data.items && data.items.length) {
-          videos = data.items.filter(isPlayable).map(normalize);
-        } else {
-          // Fallback: if the playlist read fails, use search (costlier, may lag).
-          const searchUrl = `https://www.googleapis.com/youtube/v3/search?key=${API_KEY}` +
-            `&channelId=${CHANNEL_ID}&part=snippet,id&order=date&maxResults=${MAX_RESULTS}&type=video`;
-          const sRes = await fetch(searchUrl);
-          const sData = await sRes.json();
-          videos = (sData.items || []).filter(function(v) { return v.id && v.id.videoId; });
+    async function fetchPage(token) {
+      const tokenParam = token ? `&pageToken=${encodeURIComponent(token)}` : '';
+      if (!feed.useSearch) {
+        const url = `https://www.googleapis.com/youtube/v3/playlistItems?key=${API_KEY}` +
+          `&playlistId=${UPLOADS_PLAYLIST}&part=snippet,contentDetails&maxResults=${PAGE_SIZE}${tokenParam}`;
+        const data = await (await fetch(url)).json();
+        if (data.items) {
+          return { videos: data.items.filter(isPlayable).map(normalize), next: data.nextPageToken || null };
         }
-
-        if (!videos.length) {
-          grid.innerHTML = '<div class="loading-state">No episodes found. Check back soon.</div>';
-          return;
-        }
-
-        // Newest first, in case the playlist ever returns out of order.
-        videos.sort(function(a, b) {
-          return new Date(b.snippet.publishedAt) - new Date(a.snippet.publishedAt);
-        });
-
-        grid.innerHTML = '';
-        videos.forEach((video, i) => {
-          grid.appendChild(createCard(video, i));
-        });
-      } catch (err) {
-        grid.innerHTML = `<div class="loading-state">Couldn't load episodes right now. <a href="https://www.youtube.com/@ModernBusinessLife" target="_blank" style="color:var(--amber-dark)">Watch on YouTube →</a></div>`;
-        console.error(err);
+        if (token) throw new Error((data.error && data.error.message) || 'playlist page failed');
+        feed.useSearch = true; // first page failed: switch to search (costlier, may lag)
       }
+      const sUrl = `https://www.googleapis.com/youtube/v3/search?key=${API_KEY}` +
+        `&channelId=${CHANNEL_ID}&part=snippet,id&order=date&maxResults=${PAGE_SIZE}&type=video${tokenParam}`;
+      const sData = await (await fetch(sUrl)).json();
+      if (!sData.items) throw new Error((sData.error && sData.error.message) || 'search failed');
+      return {
+        videos: sData.items.filter(function(v) { return v.id && v.id.videoId; }),
+        next: sData.nextPageToken || null
+      };
+    }
+
+    function setStatus(html) {
+      document.getElementById('videoStatus').innerHTML = html;
+    }
+
+    async function loadMore() {
+      if (feed.loading || feed.nextToken === null) return;
+      feed.loading = true;
+      const grid = document.getElementById('videoGrid');
+      const btn = document.getElementById('loadMoreBtn');
+      if (feed.rendered > 0) setStatus('<div class="spinner"></div>Loading more episodes…');
+      btn.hidden = true;
+      try {
+        const page = await fetchPage(feed.nextToken);
+        feed.nextToken = page.next;
+
+        if (feed.rendered === 0) grid.innerHTML = '';
+        page.videos.forEach(function(video) {
+          const id = video.id.videoId;
+          if (feed.seen.has(id)) return;
+          feed.seen.add(id);
+          grid.appendChild(createCard(video, feed.rendered));
+          feed.rendered++;
+        });
+
+        if (feed.rendered === 0 && feed.nextToken === null) {
+          grid.innerHTML = '<div class="loading-state">No episodes found. Check back soon.</div>';
+          setStatus('');
+        } else if (feed.nextToken === null) {
+          setStatus(`That's all ${feed.rendered} episodes. <a href="https://www.youtube.com/@ModernBusinessLife" target="_blank" rel="noopener">Subscribe on YouTube →</a>`);
+        } else {
+          setStatus('');
+          btn.hidden = false; // manual fallback if the observer doesn't fire
+        }
+      } catch (err) {
+        console.error(err);
+        if (feed.rendered === 0) {
+          grid.innerHTML = `<div class="loading-state">Couldn't load episodes right now. <a href="https://www.youtube.com/@ModernBusinessLife" target="_blank" style="color:var(--amber-dark)">Watch on YouTube →</a></div>`;
+          setStatus('');
+        } else {
+          setStatus("Couldn't load more episodes.");
+          btn.hidden = false;
+        }
+      } finally {
+        feed.loading = false;
+      }
+      // If the sentinel is still on screen (tall screens), keep filling.
+      if (feed.nextToken !== null && sentinelVisible()) loadMore();
+    }
+
+    function sentinelVisible() {
+      const r = document.getElementById('videoSentinel').getBoundingClientRect();
+      return r.top < window.innerHeight + 600;
+    }
+
+    function initEpisodeFeed() {
+      document.getElementById('loadMoreBtn').addEventListener('click', loadMore);
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver(function(entries) {
+          if (entries[0].isIntersecting) loadMore();
+        }, { rootMargin: '600px 0px' }).observe(document.getElementById('videoSentinel'));
+      }
+      loadMore();
     }
 
     function openModal(videoId) {
@@ -800,7 +886,7 @@
     });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
 
-    loadVideos();
+    initEpisodeFeed();
   </script>
   <script>
     // Guest application -> shared Formspree endpoint, labelled for Modern Business Life
